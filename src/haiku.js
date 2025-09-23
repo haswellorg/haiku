@@ -12,8 +12,17 @@
         return el.hasAttribute(`hk-${name}`);
     }
 
-    function findClosest(el, name) {
-        return el.closest(`[hk-${name}]`)
+    function findNearest(el, attribute) {
+        let nearestEl = null;
+        let sibling = el.nextElementSibling;
+        while (sibling) {
+            if (hasAttribute(sibling, attribute)) {
+                break
+            }
+            sibling = sibling.nextElementSibling
+        }
+        nearestEl = sibling;
+        return nearestEl;
     }
 
     function haiku() {
@@ -51,8 +60,6 @@
 
     function handleIf(el) {
         const truthy = getRawAttribute(el, "if");
-        const closestElse = findClosest(el, 'else')
-        console.log(closestElse)
         const eval = Function(`return ${truthy}`)();
         if (eval) {
             hideElse(el)
@@ -63,16 +70,8 @@
     }
 
     function hideElse(el) {
-        let elseEl = null;
-        let sibling = el.nextElementSibling;
-        while (sibling) {
-            if (hasAttribute(sibling, "else")) {
-                elseEl = sibling;
-                break;
-            }
-            sibling = sibling.nextElementSibling
-        }
-        elseEl.remove();
+        const nearestElseEl = findNearest(el, 'else')
+        nearestElseEl.remove();
     }
 
     if (document.readyState === "loading") {
