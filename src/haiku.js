@@ -2,6 +2,7 @@
     const actions = {
         'hk-hook': handleHook,
         'hk-if': handleIf,
+        'hk-get': handleGet,
     }
 
     function getRawAttribute(el, name) {
@@ -23,6 +24,11 @@
         }
         nearestEl = sibling;
         return nearestEl;
+    }
+
+    function findTarget(el) {
+        const targetSelector = getRawAttribute(el, "target");
+        return document.querySelector(targetSelector);
     }
 
     function haiku() {
@@ -52,15 +58,19 @@
         actionFn(el)
     }
 
+    function executeFunction(fn) {
+        return Function(`return ${fn}`)()
+    }
+
     function handleHook(el) {
         const hook = getRawAttribute(el, "hook");
-        const result = Function(`return ${hook}`)();
+        const result = executeFunction(hook);
         el.innerHTML = result;
     }
 
     function handleIf(el) {
         const truthy = getRawAttribute(el, "if");
-        const eval = Function(`return ${truthy}`)();
+        const eval = executeFunction(truthy);
         if (eval) {
             hideElse(el)
             return
@@ -72,6 +82,19 @@
     function hideElse(el) {
         const nearestElseEl = findNearest(el, 'else')
         nearestElseEl.remove();
+    }
+
+    async function handleGet(el) {
+        try {
+            const url = getRawAttribute(el, "get")
+            const response = await fetch(url, {
+                method: "GET"
+            })
+            const data = await response.json();
+            findTarget(el).innerHTML = data.title
+        } catch(err) {
+            console.error("Request failed: ", err)
+        }
     }
 
     if (document.readyState === "loading") {
