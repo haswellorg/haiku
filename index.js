@@ -8,3 +8,7 @@ function goodbye() {
 function click() {
     return "Thank you."
 }
+
+function visible() {
+    return false;
+}
