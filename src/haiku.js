@@ -41,6 +41,18 @@
         return state[key];
     }
 
+    function emit(el, type, detail = {}) {
+        const event = new CustomEvent(type, {
+            bubbles: true,
+            detail
+        })
+        el.dispatchEvent(event);
+    }
+
+    //----
+    // dispatcher
+    //----
+
     function haiku() {
         const allElements = Object.keys(actions).map(attr => `[${attr}]`).join(',');
         document.querySelectorAll(allElements).forEach(el => {
@@ -52,13 +64,13 @@
                 return;
             }
             el.addEventListener(trigger, (e) => {
-                actionFn(el)
+                actionFn({el, emit})
             })
         })
     }
 
     function loadImmediately(el, actionFn) {
-        actionFn(el)
+        actionFn({el, emit})
     }
 
     function executeFunction(fn) {
@@ -87,28 +99,28 @@
         nearestElseEl.remove();
     }
 
-    async function handleGet(el) {
+    async function handleGet({el, emit}) {
         try {
             const url = getRawAttribute(el, "get")
             const response = await fetch(url, { 
                 method: "GET" 
             })
             const data = await response.json();
+            
             if (hasAttribute(el, "key")) {
                 const key = getRawAttribute(el, "key");
                 setState(key, data);
-                document.querySelectorAll(`[hk-data^="${key}."]`).forEach(handleData)
+                emit(el, "state:changed", {key, value: data});
             }
         } catch(err) {
             console.error("Request failed: ", err)
         }
     }
 
-    function handleData(el) {
-        const rawData = getRawAttribute(el, "data").split(".");
-        const key = rawData[0];
-        const stateValue = getState(key);
-        el.innerHTML = stateValue[rawData[1]]
+    function handleData({el}) {
+        const [key, prop] = getRawAttribute(el, "data").split(".");
+        const value = getState(key);
+        el.innerHTML = value?.[prop]
     }
 
     function getDefaultTrigger(el) {
@@ -117,6 +129,13 @@
         }
         return 'click';
     }
+    
+    document.addEventListener("state:changed", (e) => {
+        const {key} = e.detail;
+        document.querySelectorAll(`[hk-data^="${key}."]`).forEach(el => {
+            handleData({el})
+        })
+    })
 
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", haiku);   
