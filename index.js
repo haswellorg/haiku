@@ -1,14 +1,3 @@
-function hello() {
-    return "Hello, World!"
-}
-function goodbye() {
-    return "Goodbye, World!"
-}
-
-function click() {
-    return "Thank you."
-}
-
-function visible() {
-    return false;
+function test(todo) {
+    console.log(todo)
 }

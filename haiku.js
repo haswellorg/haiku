@@ -77,10 +77,12 @@
         return Function(`return ${fn}`)()
     }
 
-    function handleHook(el) {
+    function handleHook({el}) {
         const hook = getRawAttribute(el, "hook");
-        const result = executeFunction(hook);
-        el.innerHTML = result;
+        // const result = executeFunction(hook);
+        // el.innerHTML = result;
+        const fn = Function("todo", hook);
+        fn(getState("todo"))
     }
 
     function handleIf(el) {
@@ -107,10 +109,10 @@
             })
             const data = await response.json();
             
-            if (hasAttribute(el, "key")) {
-                const key = getRawAttribute(el, "key");
+            if (hasAttribute(el, "data-key")) {
+                const key = getRawAttribute(el, "data-key");
                 setState(key, data);
-                emit(el, "state:changed", {key, value: data});
+                emit(el, "state:receivedData", {key, value: data});
             }
         } catch(err) {
             console.error("Request failed: ", err)
@@ -130,7 +132,7 @@
         return 'click';
     }
     
-    document.addEventListener("state:changed", (e) => {
+    document.addEventListener("state:receivedData", (e) => {
         const {key} = e.detail;
         document.querySelectorAll(`[hk-data^="${key}."]`).forEach(el => {
             handleData({el})
