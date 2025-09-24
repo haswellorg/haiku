@@ -1,8 +1,10 @@
 (function(){
+    const state = {};
     const actions = {
-        'hk-hook': handleHook,
-        'hk-if': handleIf,
+        // 'hk-hook': handleHook,
+        // 'hk-if': handleIf,
         'hk-get': handleGet,
+        'hk-data': handleData,
     }
 
     function getRawAttribute(el, name) {
@@ -31,6 +33,14 @@
         return document.querySelector(targetSelector);
     }
 
+    function setState(key, value) {
+        state[key] = value;
+    }
+
+    function getState(key) {
+        return state[key];
+    }
+
     function haiku() {
         const allElements = Object.keys(actions).map(attr => `[${attr}]`).join(',');
         document.querySelectorAll(allElements).forEach(el => {
@@ -45,13 +55,6 @@
                 actionFn(el)
             })
         })
-    }
-
-    function getDefaultTrigger(el) {
-        if (hasAttribute(el, "if")) {
-            return 'load';
-        }
-        return 'click';
     }
 
     function loadImmediately(el, actionFn) {
@@ -69,9 +72,9 @@
     }
 
     function handleIf(el) {
-        const truthy = getRawAttribute(el, "if");
-        const eval = executeFunction(truthy);
-        if (eval) {
+        const statement = getRawAttribute(el, "if");
+        const truthy = executeFunction(statement);
+        if (truthy) {
             hideElse(el)
             return
         }
@@ -87,14 +90,32 @@
     async function handleGet(el) {
         try {
             const url = getRawAttribute(el, "get")
-            const response = await fetch(url, {
-                method: "GET"
+            const response = await fetch(url, { 
+                method: "GET" 
             })
             const data = await response.json();
-            findTarget(el).innerHTML = data.title
+            if (hasAttribute(el, "key")) {
+                const key = getRawAttribute(el, "key");
+                setState(key, data);
+                document.querySelectorAll(`[hk-data^="${key}."]`).forEach(handleData)
+            }
         } catch(err) {
             console.error("Request failed: ", err)
         }
+    }
+
+    function handleData(el) {
+        const rawData = getRawAttribute(el, "data").split(".");
+        const key = rawData[0];
+        const stateValue = getState(key);
+        el.innerHTML = stateValue[rawData[1]]
+    }
+
+    function getDefaultTrigger(el) {
+        if (hasAttribute(el, "if")) {
+            return 'load';
+        }
+        return 'click';
     }
 
     if (document.readyState === "loading") {

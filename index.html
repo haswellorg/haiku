@@ -1,11 +1,22 @@
-<p hk-hook="hello()" hk-trigger="load">Hook test</p>
-<p hk-hook="click()">Click me :)</p>
+<div 
+    hk-get="https://jsonplaceholder.typicode.com/todos/1" 
+    hk-trigger="load"
+    hk-key="todo"
+    >
+    <p hk-data="todo.id">Loading...</p>
+    <p hk-data="todo.title">Loading...</p>
+    <p hk-data="todo.completed">Loading...</p>
+</div>
 
-<p hk-if="false">Lorem Ipsum</p>
-<p hk-else>Dolares</p>
-
-<button hk-get="https://jsonplaceholder.typicode.com/todos/1" hk-target="#output">Send GET</button>
-<p id="output"></p>
+<div 
+    hk-get="https://jsonplaceholder.typicode.com/todos/2" 
+    hk-trigger="load"
+    hk-key="todo2"
+    >
+    <p hk-data="todo2.id"></p>
+    <p hk-data="todo2.title"></p>
+    <p hk-data="todo2.completed"></p>
+</div>
 
 <script src="src/haiku.js"></script>
 <script src="index.js"></script>
