@@ -1,7 +1,7 @@
 (function(){
     const state = {};
     const actions = {
-        // 'hk-hook': handleHook,
+        'hk-hook': handleHook,
         // 'hk-if': handleIf,
         'hk-get': handleGet,
         'hk-data': handleData,
@@ -69,6 +69,11 @@
         })
     }
 
+    /**
+     * 
+     * @param {Node} el 
+     * @param {function} actionFn 
+     */
     function loadImmediately(el, actionFn) {
         actionFn({el, emit})
     }
@@ -81,8 +86,9 @@
         const hook = getRawAttribute(el, "hook");
         // const result = executeFunction(hook);
         // el.innerHTML = result;
-        const fn = Function("todo", hook);
-        fn(getState("todo"))
+        const fn = Function("todo", `return ${hook}`);
+        const result = fn(getState("todo"))
+        el.innerHTML = result
     }
 
     function handleIf(el) {
@@ -112,7 +118,7 @@
             if (hasAttribute(el, "data-key")) {
                 const key = getRawAttribute(el, "data-key");
                 setState(key, data);
-                emit(el, "state:receivedData", {key, value: data});
+                emit(el, "receivedData", {key, value: data});
             }
         } catch(err) {
             console.error("Request failed: ", err)
@@ -132,7 +138,7 @@
         return 'click';
     }
     
-    document.addEventListener("state:receivedData", (e) => {
+    document.addEventListener("receivedData", (e) => {
         const {key} = e.detail;
         document.querySelectorAll(`[hk-data^="${key}."]`).forEach(el => {
             handleData({el})
