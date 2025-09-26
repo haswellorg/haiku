@@ -79,7 +79,8 @@
     }
 
     function executeFunction(fn) {
-        return Function(`return ${fn}`)()
+        // var rawFn = Function(`return ${fn}`)()
+        // console.log(rawFn)
     }
 
     function handleHook({el}) {

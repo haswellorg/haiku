@@ -1,3 +1,11 @@
 function test(todo) {
-    console.log(todo)
+    if (todo.userId === 1) {
+        todo.title = "Hello, World!"
+        return todo.title
+    }
+    return "FALSE"
+}
+
+function test2(todo) {
+    return todo.title
 }
