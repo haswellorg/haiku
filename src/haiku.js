@@ -14,6 +14,11 @@
     const attributes = {
         HK_TRIGGER: "hk-trigger",
         HK_GET: "hk-get",
+
+        HK_DATA_KEY: "hk-data-key",
+        HK_DATA: "hk-data",
+
+        HK_RENDER: "hk-render"
     }
 
     /**
@@ -21,7 +26,8 @@
      * @type Object
      */
     const events = {
-        HAIKU_ERROR: "haiku:error"
+        HAIKU_ERROR: "haiku:error",
+        HAIKU_FETCH_COMPLETED: "haiku:fetchCompleted"
     }
 
     /**
@@ -44,6 +50,7 @@
     */
     const actions = {
         [attributes.HK_GET]: handleGet,
+        [attributes.HK_RENDER]: handleGet
     }
 
     /**
@@ -54,13 +61,16 @@
          * Holds all the elements that will have a default load trigger
          * @type string[]
          */
-        defaultLoadElements: [""],
+        defaultLoadTags: ["div"],
 
         /**
          * Holds all the Haiku attributes that will have a default load trigger
          * @type string[] 
         */
-        defaultLoadAttributes: [""],
+        defaultLoadAttributes: [
+            attributes.HK_RENDER,
+            attributes.HK_DATA
+        ],
     }
 
     //========================================================
@@ -90,6 +100,15 @@
      */
     function hasAttribute(elt, name) {
         return elt.hasAttribute(elt, `${name}`);
+    }
+
+    /**
+     * @param {Node} elt 
+     * @param {string} tag 
+     * @returns {boolean}
+     */
+    function isTag(elt, tag) {
+        return elt.tagName === tag.toUpperCase()
     }
 
     /**
@@ -157,6 +176,11 @@
      * @returns {string}
      */
     function getDefaultTrigger(elt) {
+        if (
+            config.defaultLoadTags.map(tag => isTag(elt, tag)) || 
+            config.defaultLoadAttributes.map(attr => hasAttribute(elt, attr))) {
+            return triggers.LOAD;
+        }
         return triggers.CLICK;
     }
 
@@ -169,13 +193,18 @@
         actionFn(elt)
     }
 
+    /**
+     * @param {Node} elt 
+     * @param {string} url 
+     * @param {string} method 
+     */
     async function handleFetchRequest(elt, url, method) {
         let response;
         try {
             response = await fetch(url, {
                 method: method
             })
-            console.log(response)
+            handleFetchResponse(elt, response);
         } catch (err) {
             emit(elt, events.HAIKU_ERROR, {
                 msg: err
@@ -183,10 +212,36 @@
         }
     }
 
+    async function handleFetchResponse(elt, response) {
+        type = response.headers.get("content-type").split("; ")[0]
+        switch (type) {
+            case "application/json":
+                handleJsonData(elt, await response.json());
+                break;
+            default: 
+                handleTextData(elt, await response.text());
+                break;
+        }
+    }
+
+    function handleJsonData(elt, data) {
+        if (hasAttribute(elt)) {
+
+        }
+    }
+
+    function handleTextData(elt, data) {
+
+    }
+
     //========================================================
     // Handlers
     //========================================================
 
+    /**
+     * @param {Node} elt 
+     * @param {Function} emit 
+     */
     function handleGet(elt, emit) {
         handleFetchRequest(elt, getRawAttribute(elt, attributes.HK_GET), "GET");
     }
@@ -204,6 +259,9 @@
         document.querySelectorAll(hkAttributes).forEach(dispatchElement)
     }
 
+    /**
+     * @param {Node} elt 
+     */
     function dispatchElement(elt) {
         const actionTrigger = getTrigger(elt);
         const actionAttr = Object.keys(actions).find(attr => elt.hasAttribute(attr))
@@ -211,11 +269,16 @@
         triggerEvent(elt, actionTrigger, actionFn)
     }
 
+    /**
+     * @param {Node} elt 
+     * @param {string} trigger 
+     * @param {Function} actionFn 
+     */
     function triggerEvent(elt, trigger, actionFn) {
         if (trigger === triggers.LOAD) {
             triggerImmediately(elt, actionFn);
         } else {
-            elt.addEventListener(actionTrigger, (e) => {
+            elt.addEventListener(trigger, (e) => {
                 e.preventDefault();
                 actionFn(elt, emit)
             })
@@ -226,9 +289,19 @@
     // Custom Events
     //========================================================
     
+    /**
+     * Haiku error event
+     */
     document.addEventListener(events.HAIKU_ERROR, (e) => {
         const {msg} = e.detail;
         error(msg);
+    })
+
+    /**
+     * Haiku fetch completed event
+     */
+    document.addEventListener(events.HAIKU_FETCH_COMPLETED, (e) => {
+        console.log("update stuff")
     })
 
     //========================================================
