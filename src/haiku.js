@@ -50,8 +50,6 @@
     */
     const actions = {
         [attributes.HK_GET]: handleGet,
-        [attributes.HK_RENDER]: handleRender,
-        [attributes.HK_DATA]: handleData
     }
 
     /**
@@ -69,7 +67,8 @@
          * @type string[] 
         */
         defaultLoadAttributes: [
-            attributes.HK_RENDER,
+            attributes.HK_DATA,
+            attributes.HK_RENDER
         ],
     }
 
@@ -211,8 +210,16 @@
      * @param {string} key 
      */
     function loadAllDataAttributes(key) {
-        document.querySelectorAll(`[hk-data^="${key}"]`).forEach(elt => {
+        document.querySelectorAll(`[hk-data^="${key}."]`).forEach(elt => {
             handleData(elt)
+        })
+    }
+
+    function loadAllRenderAttributes(key) {
+        document.querySelectorAll(`[hk-render]`).forEach(elt => {
+            const fn = getRawAttribute(elt, attributes.HK_RENDER);
+            const params = fn.slice(fn.indexOf("(") + 1, -1).split(",").map(s => s.trim())
+            handleRender(elt, fn, params);
         })
     }
 
@@ -269,8 +276,22 @@
         const [key, prop] = getRawAttribute(elt, attributes.HK_DATA).split(".");
         const data = getData(key);
         if (prop !== undefined) {
+            // TODO: replace with appendChild
             elt.innerHTML = data?.[prop]
         }
+    }
+
+    /**
+     * Executes and returns a function
+     * @param {Node} elt 
+     * @param {Function} fn 
+     * @param {string[]} params 
+     */
+    function handleRender(elt, fn, params) {
+        const render = Function(params, `return ${fn}`);
+        const result = render(getData(params))
+        // TODO: replace with append child
+        elt.innerHTML = result
     }
 
     //========================================================
@@ -329,6 +350,7 @@
     document.addEventListener(events.HAIKU_FETCH_COMPLETED, (e) => {
         const { key } = e.detail;
         loadAllDataAttributes(key)
+        loadAllRenderAttributes(key)
     })
 
     //========================================================
