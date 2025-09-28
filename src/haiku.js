@@ -50,7 +50,8 @@
     */
     const actions = {
         [attributes.HK_GET]: handleGet,
-        [attributes.HK_RENDER]: handleGet
+        [attributes.HK_RENDER]: handleRender,
+        [attributes.HK_DATA]: handleData
     }
 
     /**
@@ -69,7 +70,6 @@
         */
         defaultLoadAttributes: [
             attributes.HK_RENDER,
-            attributes.HK_DATA
         ],
     }
 
@@ -99,7 +99,7 @@
      * @returns {boolean}
      */
     function hasAttribute(elt, name) {
-        return elt.hasAttribute(elt, `${name}`);
+        return elt.hasAttribute(name);
     }
 
     /**
@@ -136,7 +136,7 @@
      * @param {string} key 
      * @param {Object} value 
      */
-    function storeData(key, value) {
+    function setData(key, value) {
         data[key] = value;
     }
 
@@ -177,21 +177,48 @@
      */
     function getDefaultTrigger(elt) {
         if (
-            config.defaultLoadTags.map(tag => isTag(elt, tag)) || 
-            config.defaultLoadAttributes.map(attr => hasAttribute(elt, attr))) {
+            config.defaultLoadTags.some(tag => isTag(elt, tag)) || 
+            config.defaultLoadAttributes.some(attr => hasAttribute(elt, attr))) {
             return triggers.LOAD;
         }
         return triggers.CLICK;
     }
 
     /**
-     * Triggers the action immediately
      * @param {Node} elt 
      * @param {Function} actionFn 
      */
     function triggerImmediately(elt, actionFn) {
         actionFn(elt)
     }
+
+    /**
+     * @param {Node} elt 
+     * @param {Object} data 
+     */
+    function maybeStoreData(elt, data) {
+        if (hasAttribute(elt, attributes.HK_DATA_KEY)) {
+            const key = getRawAttribute(elt, attributes.HK_DATA_KEY);
+            setData(key, data);
+            emit(elt, events.HAIKU_FETCH_COMPLETED, {
+                key,
+                value: data
+            })
+        }
+    }
+
+    /**
+     * @param {string} key 
+     */
+    function loadAllDataAttributes(key) {
+        document.querySelectorAll(`[hk-data^="${key}"]`).forEach(elt => {
+            handleData(elt)
+        })
+    }
+
+    //========================================================
+    // Handlers
+    //========================================================
 
     /**
      * @param {Node} elt 
@@ -212,40 +239,39 @@
         }
     }
 
+    /**
+     * @param {Node} elt 
+     * @param {Response} response 
+     */
     async function handleFetchResponse(elt, response) {
         type = response.headers.get("content-type").split("; ")[0]
         switch (type) {
             case "application/json":
-                handleJsonData(elt, await response.json());
+                maybeStoreData(elt, await response.json());
                 break;
             default: 
-                handleTextData(elt, await response.text());
+                maybeStoreData(elt, await response.text());
                 break;
         }
     }
-
-    function handleJsonData(elt, data) {
-        if (hasAttribute(elt)) {
-
-        }
-    }
-
-    function handleTextData(elt, data) {
-
-    }
-
-    //========================================================
-    // Handlers
-    //========================================================
 
     /**
      * @param {Node} elt 
-     * @param {Function} emit 
      */
-    function handleGet(elt, emit) {
+    function handleGet(elt) {
         handleFetchRequest(elt, getRawAttribute(elt, attributes.HK_GET), "GET");
     }
 
+    /**
+     * @param {Node} elt 
+     */
+    function handleData(elt) {
+        const [key, prop] = getRawAttribute(elt, attributes.HK_DATA).split(".");
+        const data = getData(key);
+        if (prop !== undefined) {
+            elt.innerHTML = data?.[prop]
+        }
+    }
 
     //========================================================
     // Dispatcher
@@ -293,7 +319,7 @@
      * Haiku error event
      */
     document.addEventListener(events.HAIKU_ERROR, (e) => {
-        const {msg} = e.detail;
+        const { msg } = e.detail;
         error(msg);
     })
 
@@ -301,7 +327,8 @@
      * Haiku fetch completed event
      */
     document.addEventListener(events.HAIKU_FETCH_COMPLETED, (e) => {
-        console.log("update stuff")
+        const { key } = e.detail;
+        loadAllDataAttributes(key)
     })
 
     //========================================================
