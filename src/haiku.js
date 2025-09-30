@@ -13,12 +13,17 @@
      */
     const attributes = {
         HK_TRIGGER: "hk-trigger",
+
         HK_GET: "hk-get",
+        HK_POST: "hk-post",
+
+        HK_REGISTER: "hk-register",
 
         HK_DATA_KEY: "hk-data-key",
         HK_DATA: "hk-data",
+        HK_RENDER: "hk-render",
 
-        HK_RENDER: "hk-render"
+        HK_TARGET: "hk-target"
     }
 
     /**
@@ -50,6 +55,7 @@
     */
     const actions = {
         [attributes.HK_GET]: handleGet,
+        [attributes.HK_POST]: handlePost,
     }
 
     /**
@@ -215,12 +221,66 @@
         })
     }
 
+    /**
+     * @param {string} key 
+     */
     function loadAllRenderAttributes(key) {
         document.querySelectorAll(`[hk-render]`).forEach(elt => {
             const fn = getRawAttribute(elt, attributes.HK_RENDER);
             const params = fn.slice(fn.indexOf("(") + 1, -1).split(",").map(s => s.trim())
             handleRender(elt, fn, params);
         })
+    }
+
+    /**
+     * @param {*} target 
+     * @param {*} value 
+     */
+    function replace(target, value) {
+        //TODO: This needs to be sanitized lol
+        const tplElt = document.createElement("template");
+        tplElt.innerHTML = value;
+        target.replaceWith(tplElt.content.cloneNode(true));
+    }
+
+    /**
+     * @param {Node} elt 
+     * @returns {Node | null}
+     */
+    function findTargetElement(elt) {
+        const targetElement = getRawAttribute(elt, attributes.HK_TARGET);
+        return document.querySelector(targetElement)
+    }
+
+    /**
+     * @param {Node[]} children 
+     * @param {string} tag 
+     * @returns {Node[]}
+     */
+    function findAllTagsWrapper(children, tag) {
+        return findAllTags(children, [], tag, 0);
+    }
+
+    /**
+     * Recursively loop through an input, and insert it into the output if it matches the given tag
+     * @param {Node[]} input 
+     * @param {Node[]} output 
+     * @param {string} tag 
+     * @param {number} pos 
+     * @returns {Node[]}
+     */
+    function findAllTags(input, output, tag, pos) {
+        if (pos >= input.length) {
+            console.log(input[pos])
+            return output
+        }
+        if (input[pos].children.length > 0) {
+            findAllTags(Array.from(input[pos].children), output, tag, 0)
+        } 
+        if (isTag(input[pos], tag)) {
+            output.push(input[pos])
+        }
+        return findAllTags(input, output, tag, ++pos);
     }
 
     //========================================================
@@ -230,15 +290,14 @@
     /**
      * @param {Node} elt 
      * @param {string} url 
-     * @param {string} method 
      */
-    async function handleFetchRequest(elt, url, method) {
+    async function handleGetFetchRequest(elt, url) {
         let response;
         try {
             response = await fetch(url, {
-                method: method
+                method: "GET"
             })
-            handleFetchResponse(elt, response);
+            determineFetchResponse(elt, response);
         } catch (err) {
             emit(elt, events.HAIKU_ERROR, {
                 msg: err
@@ -248,17 +307,44 @@
 
     /**
      * @param {Node} elt 
+     * @param {string} url 
+     * @param {Body} body 
+     */
+    async function handlePostFetchRequest(elt, url, body) {
+        let response;
+        try {
+
+        } catch (err) {
+            emit(elt, events.HAIKU_ERROR, {
+                msg: err
+            })
+        }
+    }
+
+    /**
+     * @param {Node} elt 
      * @param {Response} response 
      */
-    async function handleFetchResponse(elt, response) {
+    async function determineFetchResponse(elt, response) {
         type = response.headers.get("content-type").split("; ")[0]
         switch (type) {
             case "application/json":
-                maybeStoreData(elt, await response.json());
+                handleFetchResponse(elt, await response.json());
                 break;
             default: 
-                maybeStoreData(elt, await response.text());
+                handleFetchResponse(elt, await response.text());
                 break;
+        }
+    }
+
+    /**
+     * @param {elt} elt 
+     * @param {Object | string} response 
+     */
+    function handleFetchResponse(elt, response) {
+        maybeStoreData(elt, response);
+        if (hasAttribute(elt, attributes.HK_TARGET)) {
+            replace(findTargetElement(elt), response)
         }
     }
 
@@ -266,7 +352,12 @@
      * @param {Node} elt 
      */
     function handleGet(elt) {
-        handleFetchRequest(elt, getRawAttribute(elt, attributes.HK_GET), "GET");
+        handleGetFetchRequest(elt, getRawAttribute(elt, attributes.HK_GET));
+    }
+
+    function handlePost(elt) {
+        const children = Array.from(elt.children)
+        console.log("Found:",findAllTagsWrapper(children, "input"))
     }
 
     /**
@@ -276,8 +367,7 @@
         const [key, prop] = getRawAttribute(elt, attributes.HK_DATA).split(".");
         const data = getData(key);
         if (prop !== undefined) {
-            // TODO: replace with appendChild
-            elt.innerHTML = data?.[prop]
+            replace(elt, data?.[prop])
         }
     }
 
@@ -290,8 +380,7 @@
     function handleRender(elt, fn, params) {
         const render = Function(params, `return ${fn}`);
         const result = render(getData(params))
-        // TODO: replace with append child
-        elt.innerHTML = result
+        replace(elt, result)
     }
 
     //========================================================

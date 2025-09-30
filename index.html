@@ -1,10 +1,28 @@
-<div hk-get="https://jsonplaceholder.typicode.com/todos/1" hk-data-key="todo">
-    <p hk-data="todo.title"></p>
-    <span>
-        IS THE ID === 1?<div hk-render="foo()"></div>
-    </span>
-</div>
+<!-- <div hk-get="https://jsonplaceholder.typicode.com/todos/1" hk-data-key="todo">
+    <p hk-data="todo.title">Loading..</p>
+</div> -->
 
+<form hk-post="https://jsonplaceholder.typicode.com/posts" hk-trigger="load">
+    <div>
+        <div>
+            <label for="title">Title:</label>
+        </div>
+        <input type="text" name="title">
+    </div>
+    <div>
+        <div>
+            <label for="body">Body:</label>
+        </div>
+        <input type="text" name="body">
+    </div>
+    <div>
+        <div>
+            <label for="userId">User Id:</label>
+        </div>
+        <input type="number" name="userId">
+    </div>
+    <button type="submit">Submit</button>
+</form>
 
 <script src="src/haiku.js"></script>
 <script src="index.js"></script>
