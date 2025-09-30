@@ -2,7 +2,7 @@
     <p hk-data="todo.title">Loading..</p>
 </div> -->
 
-<form hk-post="https://jsonplaceholder.typicode.com/posts" hk-trigger="load">
+<form hk-post="https://jsonplaceholder.typicode.com/posts" hk-trigger="submit" hk-data-key="todo">
     <div>
         <div>
             <label for="title">Title:</label>
@@ -23,6 +23,23 @@
     </div>
     <button type="submit">Submit</button>
 </form>
+
+<div>
+    <div>
+        <div hk-data="todo.id"></div>
+    </div>
+    <div>
+        <div hk-data="todo.title"></div>
+    </div>
+    <div>
+        <div hk-data="todo.body"></div>
+    </div>
+    <div>
+        <div hk-data="todo.userId"></div>
+    </div>
+</div>
+
+
 
 <script src="src/haiku.js"></script>
 <script src="index.js"></script>

@@ -271,7 +271,6 @@
      */
     function findAllTags(input, output, tag, pos) {
         if (pos >= input.length) {
-            console.log(input[pos])
             return output
         }
         if (input[pos].children.length > 0) {
@@ -313,7 +312,14 @@
     async function handlePostFetchRequest(elt, url, body) {
         let response;
         try {
-
+            response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json; charset=UTF-8"
+                },
+                body: JSON.stringify(body)
+            })
+            determineFetchResponse(elt, response);
         } catch (err) {
             emit(elt, events.HAIKU_ERROR, {
                 msg: err
@@ -342,6 +348,7 @@
      * @param {Object | string} response 
      */
     function handleFetchResponse(elt, response) {
+        console.log(response)
         maybeStoreData(elt, response);
         if (hasAttribute(elt, attributes.HK_TARGET)) {
             replace(findTargetElement(elt), response)
@@ -354,10 +361,20 @@
     function handleGet(elt) {
         handleGetFetchRequest(elt, getRawAttribute(elt, attributes.HK_GET));
     }
-
+    
+    /**
+     * @param {Node} elt 
+     */
     function handlePost(elt) {
         const children = Array.from(elt.children)
-        console.log("Found:",findAllTagsWrapper(children, "input"))
+        const inputTags = findAllTagsWrapper(children, "input")
+        const body = {}
+        
+        inputTags.map(el => {
+            body[getRawAttribute(el, "name")] = el.value
+        })
+
+        handlePostFetchRequest(elt, getRawAttribute(elt, attributes.HK_POST), body);
     }
 
     /**
