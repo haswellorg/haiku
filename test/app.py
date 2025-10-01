@@ -30,11 +30,11 @@ def todo():
         )
         return response
 
-@app.route("/api/todo/delete", methods = ["POST"])
-def delete_todo():
+@app.route("/api/todo/delete/<item>", methods = ["POST"])
+def delete_todo(item):
     if request.method == "POST":
         
-        todos.delete(request.get_json().get("todo"))
+        todos.remove(item)
 
         response = app.response_class(
             response=json.dumps(todos),
