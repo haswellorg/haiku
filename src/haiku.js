@@ -238,13 +238,7 @@
      */
     function replace(target, value) {
         //TODO: This needs to be sanitized lol
-        // const tplElt = document.createElement("template");
-        // tplElt.innerHTML = value;
-        // target.replaceWith(tplElt.content.cloneNode(true));
-        // target.innerHTML = value;
-        console.log(value)
-        console.log(target)
-        target.appendChild(value);
+        target.innerHTML = value;
     }
 
     /**
@@ -401,11 +395,6 @@
         const render = Function(params, `return ${fn}`);
         const result = render(getData(params))
         replace(elt, result)
-        // TODO: This could be cleaner
-        console.log(result)
-        result.forEach(el => {
-            dispatchElement(el);
-        })
     }
 
     //========================================================
