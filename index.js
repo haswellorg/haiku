@@ -7,7 +7,7 @@ function showTodoList(todos) {
     const todoList = document.createElement("ul")
     todos.forEach(todo => {
         const item = document.createElement("li")
-        item.setAttribute("hk-post", `http://localhost:5000/api/todo/delete`)
+        item.setAttribute("hk-post", `http://localhost:5000/api/todo/delete/${todo}`)
         item.innerText = todo
         todoList.appendChild(item)
     });
