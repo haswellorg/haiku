@@ -238,7 +238,7 @@
      */
     function replace(target, value) {
         //TODO: This needs to be sanitized lol
-        target.innerHTML = value;
+        target.appendChild(value);
     }
 
     /**
@@ -395,6 +395,10 @@
         const render = Function(params, `return ${fn}`);
         const result = render(getData(params))
         replace(elt, result)
+        console.log(result.children.length)
+        Array.from(result.children).forEach(el => {
+            dispatchElement(el)
+        })
     }
 
     //========================================================
