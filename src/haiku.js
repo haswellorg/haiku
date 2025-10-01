@@ -238,9 +238,10 @@
      */
     function replace(target, value) {
         //TODO: This needs to be sanitized lol
-        const tplElt = document.createElement("template");
-        tplElt.innerHTML = value;
-        target.replaceWith(tplElt.content.cloneNode(true));
+        // const tplElt = document.createElement("template");
+        // tplElt.innerHTML = value;
+        // target.replaceWith(tplElt.content.cloneNode(true));
+        target.innerHTML = value;
     }
 
     /**
@@ -381,6 +382,7 @@
      * @param {Node} elt 
      */
     function handleData(elt) {
+        console.log(elt)
         const [key, prop] = getRawAttribute(elt, attributes.HK_DATA).split(".");
         const data = getData(key);
         if (prop !== undefined) {
@@ -455,6 +457,7 @@
      */
     document.addEventListener(events.HAIKU_FETCH_COMPLETED, (e) => {
         const { key } = e.detail;
+        console.log(getData(key))
         loadAllDataAttributes(key)
         loadAllRenderAttributes(key)
     })
