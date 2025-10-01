@@ -2,42 +2,20 @@
     <p hk-data="todo.title">Loading..</p>
 </div> -->
 
-<form hk-post="https://jsonplaceholder.typicode.com/posts" hk-trigger="submit" hk-data-key="todo">
+<div hk-get="http://localhost:5000/api/todo" hk-data-key="todos">
+</div>
+
+<form hk-post="http://localhost:5000/api/todo" hk-trigger="submit" hk-data-key="todos">
     <div>
         <div>
-            <label for="title">Title:</label>
+            <label for="title">Todo:</label>
         </div>
-        <input type="text" name="title">
+        <input type="text" name="todo">
+        <button type="submit">Submit</button>
     </div>
-    <div>
-        <div>
-            <label for="body">Body:</label>
-        </div>
-        <input type="text" name="body">
-    </div>
-    <div>
-        <div>
-            <label for="userId">User Id:</label>
-        </div>
-        <input type="number" name="userId">
-    </div>
-    <button type="submit">Submit</button>
 </form>
 
-<div>
-    <div>
-        <div hk-data="todo.id"></div>
-    </div>
-    <div>
-        <div hk-data="todo.title"></div>
-    </div>
-    <div>
-        <div hk-data="todo.body"></div>
-    </div>
-    <div>
-        <div hk-data="todo.userId"></div>
-    </div>
-</div>
+<div hk-render="showTodoList(todos)"></div>
 
 
 

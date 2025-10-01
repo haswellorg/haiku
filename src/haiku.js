@@ -241,7 +241,10 @@
         // const tplElt = document.createElement("template");
         // tplElt.innerHTML = value;
         // target.replaceWith(tplElt.content.cloneNode(true));
-        target.innerHTML = value;
+        // target.innerHTML = value;
+        console.log(value)
+        console.log(target)
+        target.appendChild(value);
     }
 
     /**
@@ -349,7 +352,6 @@
      * @param {Object | string} response 
      */
     function handleFetchResponse(elt, response) {
-        console.log(response)
         maybeStoreData(elt, response);
         if (hasAttribute(elt, attributes.HK_TARGET)) {
             replace(findTargetElement(elt), response)
@@ -382,7 +384,6 @@
      * @param {Node} elt 
      */
     function handleData(elt) {
-        console.log(elt)
         const [key, prop] = getRawAttribute(elt, attributes.HK_DATA).split(".");
         const data = getData(key);
         if (prop !== undefined) {
@@ -400,6 +401,11 @@
         const render = Function(params, `return ${fn}`);
         const result = render(getData(params))
         replace(elt, result)
+        // TODO: This could be cleaner
+        console.log(result)
+        result.forEach(el => {
+            dispatchElement(el);
+        })
     }
 
     //========================================================
@@ -457,7 +463,6 @@
      */
     document.addEventListener(events.HAIKU_FETCH_COMPLETED, (e) => {
         const { key } = e.detail;
-        console.log(getData(key))
         loadAllDataAttributes(key)
         loadAllRenderAttributes(key)
     })
